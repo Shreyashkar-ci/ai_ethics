@@ -17,7 +17,7 @@ def convert_np_floats(obj):
     return obj
 
 def assess_bias(df):
-    # Bias thresholds dictionary
+    # Bias thresholds dictionary (same as before)
     bias_thresholds = {
         'Demographic Parity': {'lower': -0.1, 'upper': 0.1},
         'Equal Opportunity': {'lower': -0.1, 'upper': 0.1},
@@ -62,7 +62,8 @@ def main():
     st.title("AI Ethics Regulatory and Fairness Requirement")
 
     # Initialize session state for configurations
-    if 'df' not in st.session_state:
+    if 'uploaded_file_name' not in st.session_state:
+        st.session_state.uploaded_file_name = None
         st.session_state.df = None
         st.session_state.ground_truth_col = None
         st.session_state.predictions_col = None
@@ -73,16 +74,20 @@ def main():
     # Add CSV file uploader
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 
-    # If a new file is uploaded, reset session state
-    if uploaded_file is not None and uploaded_file != st.session_state.df:
-        # Read the uploaded CSV file
-        st.session_state.df = pd.read_csv(uploaded_file)
-        # Reset other session state variables
-        st.session_state.ground_truth_col = None
-        st.session_state.predictions_col = None
-        st.session_state.sensitive_feature_cols = []
-        st.session_state.statistical_target_feature = None
-        st.session_state.analysis_results = None
+    # Check if a new file is uploaded
+    if uploaded_file is not None:
+        # Compare by file name to detect new uploads
+        if uploaded_file.name != st.session_state.uploaded_file_name:
+            # Read the uploaded CSV file
+            st.session_state.df = pd.read_csv(uploaded_file)
+            st.session_state.uploaded_file_name = uploaded_file.name
+            
+            # Reset other session state variables
+            st.session_state.ground_truth_col = None
+            st.session_state.predictions_col = None
+            st.session_state.sensitive_feature_cols = []
+            st.session_state.statistical_target_feature = None
+            st.session_state.analysis_results = None
 
     # Proceed only if a DataFrame is loaded
     if st.session_state.df is not None:
@@ -303,6 +308,7 @@ def main():
                     st.warning("Group rates data is empty or invalid for the selected combination.")
             else:
                 st.warning("No data available for the selected combination. Please choose a different feature or metric.")
+
     else:
         st.warning("Upload csv to begin analysis!")
 
